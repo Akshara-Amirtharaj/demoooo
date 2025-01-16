@@ -89,7 +89,7 @@ placeholders = {
     "<<Company Name>>": company_name,
     "<<Address>>": address,
     "<<Designation>>": designation,
-    "<<Date>>": gitdate_field.strftime("%d-%m-%Y"),
+    "<<Date>>": date_field.strftime("%d-%m-%Y"),
 }
 # Combine inputs into a dictionary
 current_inputs = {
