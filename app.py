@@ -68,17 +68,13 @@ def convert_to_pdf(doc_path, pdf_path):
         except subprocess.CalledProcessError as e:
             raise Exception(f"Error using LibreOffice: {e}")
 
-
-# Initialize session state for download visibility and file paths
+# Initialize session state for tracking inputs and file paths
 if "word_file_path" not in st.session_state:
     st.session_state.word_file_path = None
-
 if "pdf_file_path" not in st.session_state:
     st.session_state.pdf_file_path = None
-
 if "last_inputs" not in st.session_state:
     st.session_state.last_inputs = {}
-
 
 def inputs_changed(current_inputs):
     """Check if the current inputs differ from the last saved inputs."""
@@ -114,7 +110,6 @@ current_inputs = {
     "date_field": date_field,
 }
 
-# Check if inputs have changed
 if inputs_changed(current_inputs):
     st.session_state.word_file_path = None
     st.session_state.pdf_file_path = None
@@ -125,18 +120,16 @@ st.session_state.last_inputs = current_inputs
 # Generate the NDA document
 if st.button("Generate NDA Document"):
     formatted_date = date_field.strftime("%d %b %Y")
-    file_name = f"NDA Agreement - {client_name} {formatted_date}.docx"
-    pdf_file_name = f"NDA Agreement - {client_name} {formatted_date}.pdf"
-    word_output_path = os.path.join(base_dir, file_name)
-    pdf_output_path = os.path.join(base_dir, pdf_file_name)
+    word_output_path = f"NDA Agreement - {client_name} {formatted_date}.docx"
+    pdf_output_path = word_output_path.replace(".docx", ".pdf")
 
     try:
         updated_path = edit_nda_template(template_path, word_output_path, placeholders)
-        pdf_generated_path = convert_to_pdf(updated_path, pdf_output_path)
+        convert_to_pdf(updated_path, pdf_output_path)
 
         # Save paths in session state
-        st.session_state.word_file_path = updated_path
-        st.session_state.pdf_file_path = pdf_generated_path
+        st.session_state.word_file_path = word_output_path
+        st.session_state.pdf_file_path = pdf_output_path
 
         st.success("NDA Document and PDF Generated Successfully!")
     except Exception as e:
