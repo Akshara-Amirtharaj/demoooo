@@ -2,7 +2,8 @@ import streamlit as st
 from docx import Document
 from datetime import datetime
 import os
-
+import platform
+import subprocess
 
 # Function to replace placeholders while maintaining the existing formatting
 def replace_placeholders(doc, placeholders):
@@ -38,21 +39,33 @@ def edit_nda_template(template_path, output_path, placeholders):
 
 
 def convert_to_pdf(doc_path, pdf_path):
-    """Convert a Word document to PDF."""
-    word = None
-    try:
-        import comtypes.client
-        word = comtypes.client.CreateObject("Word.Application")
-        word.Visible = False
-        doc = word.Documents.Open(doc_path)
-        doc.SaveAs(pdf_path, FileFormat=17)
-        doc.Close()
-        return pdf_path
-    except Exception as e:
-        raise Exception(f"Error converting Word to PDF: {e}")
-    finally:
-        if word:
+    doc_path = os.path.abspath(doc_path)
+    pdf_path = os.path.abspath(pdf_path)
+
+    if not os.path.exists(doc_path):
+        raise FileNotFoundError(f"Word document not found at {doc_path}")
+
+    if platform.system() == "Windows":
+        try:
+            import comtypes.client
+            import pythoncom
+            pythoncom.CoInitialize()
+            word = comtypes.client.CreateObject("Word.Application")
+            word.Visible = False
+            doc = word.Documents.Open(doc_path)
+            doc.SaveAs(pdf_path, FileFormat=17)
+            doc.Close()
             word.Quit()
+        except Exception as e:
+            raise Exception(f"Error using COM on Windows: {e}")
+    else:
+        try:
+            subprocess.run(
+                ['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(pdf_path), doc_path],
+                check=True
+            )
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Error using LibreOffice: {e}")
 
 
 # Initialize session state for download visibility and file paths
